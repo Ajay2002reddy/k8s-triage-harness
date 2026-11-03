@@ -1,0 +1,17 @@
+# metrics-server for kind: the upstream release manifest, unmodified (its sha256 is in
+# cluster/versions.env and checked by tests/test_cluster_config.py), plus one patch.
+# kind's kubelets serve self-signed certificates, so metrics-server must skip verifying
+# them. Acceptable on a throwaway local cluster; never on a real one.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - components.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: metrics-server
+      namespace: kube-system
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --kubelet-insecure-tls

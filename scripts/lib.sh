@@ -59,15 +59,22 @@ holds_for() {
 
 # --- fault helpers -------------------------------------------------------------------
 
-# load_fault: call at the top of a fault script. Sets FAULT_DIR, FAULT_ID, NS (from
-# truth.yaml) and CHECK_TIMEOUT. NS is read with sed; tests/test_faults.py enforces the
-# plain `namespace: <name>` line this relies on.
+# fault_namespace ID: the namespace from faults/ID/truth.yaml. Read with sed, so
+# tests/test_faults.py enforces the plain `namespace: <name>` line this relies on.
+fault_namespace() {
+  local ns
+  ns="$(sed -n 's/^namespace:[[:space:]]*//p' "$REPO_ROOT/faults/$1/truth.yaml")"
+  [[ "$ns" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] ||
+    die "$1: missing or invalid 'namespace' in truth.yaml"
+  printf '%s\n' "$ns"
+}
+
+# load_fault: call at the top of a fault script. Sets FAULT_DIR, FAULT_ID, NS and
+# CHECK_TIMEOUT (seconds a check polls before giving up).
 load_fault() {
   FAULT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[1]}")" && pwd)"
   FAULT_ID="$(basename -- "$FAULT_DIR")"
-  NS="$(sed -n 's/^namespace:[[:space:]]*//p' "$FAULT_DIR/truth.yaml")"
-  [[ "$NS" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] ||
-    die "$FAULT_ID: missing or invalid 'namespace' in truth.yaml"
+  NS="$(fault_namespace "$FAULT_ID")"
   LOG_PREFIX="fault $FAULT_ID"
   CHECK_TIMEOUT="${CHECK_TIMEOUT:-240}"
   export FAULT_DIR FAULT_ID NS CHECK_TIMEOUT

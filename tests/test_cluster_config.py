@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -36,6 +37,12 @@ def test_kind_node_image_is_digest_pinned_and_matches_kubectl() -> None:
         match = re.fullmatch(r"kindest/node:(v\d+\.\d+\.\d+)@sha256:[0-9a-f]{64}", image)
         assert match, f"node image must be pinned by tag and digest: {image}"
         assert match.group(1) == read_versions()["KUBECTL_VERSION"], "kubectl/node version skew"
+
+
+def test_vendored_metrics_server_is_byte_identical_to_upstream() -> None:
+    vendored = ROOT / "cluster" / "addons" / "metrics-server" / "components.yaml"
+    digest = hashlib.sha256(vendored.read_bytes()).hexdigest()
+    assert digest == read_versions()["METRICS_SERVER_SHA256"], "edit the kustomize patch instead"
 
 
 def test_github_actions_are_pinned_to_commit_shas() -> None:
