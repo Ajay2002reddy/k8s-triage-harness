@@ -17,8 +17,9 @@ Build an agent that finds the root cause of Kubernetes incidents, plus the produ
 6. **Pin versions** (Python, kind, k8s node image, every dependency). License: Apache-2.0.
 
 ## Environment reality: check first, report which path you took
-- This cloud container probably can't run Docker/kind. Check first.
-- If it can't, use **GitHub Actions with kind** as the real test bed, plus recorded fixtures (captured `kubectl` JSON output) for local unit tests.
+- **Verified 2026-11-03:** cloud sessions can run Docker but **not kind** (nested containers fail). See `PROGRESS.md` → Verified.
+- So **GitHub Actions with kind is the real test bed.** Cloud sessions use recorded fixtures (captured `kubectl` JSON output) for unit tests, push the branch, then read CI results with `gh run list` / `gh run view`.
+- Cluster-dependent work (fault inject/check/reset, integration tests) is only "verified" when a CI run passes.
 - Never claim something ran if it only ran in theory.
 
 ## Continuity: sessions are short-lived, so the repo is the memory
