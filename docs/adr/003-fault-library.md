@@ -29,5 +29,5 @@ M1 needs 12 faults that are verified in CI, each a folder following the add-faul
 
 ## Consequences
 - Easier: adding a fault means adding a folder; the matrix picks it up. Faults are isolated and reproducible, and leakage is caught by tests rather than review.
-- Harder / risk we accept: 12 kind clusters per run that touches faults (free on public repos, about 1 CPU-hour). Checks match upstream message text (busybox `wget` errors, HPA condition messages), so version bumps can break them. Tags aren't digests, so an upstream re-push could change an image. 4 categories aren't covered yet.
+- Harder / risk we accept: 12 kind clusters per run that touches faults (free on public repos; the first run took about 26 runner-minutes in total and 3 minutes wall-clock). Checks match upstream message text (busybox `wget` errors, HPA condition messages), so version bumps can break them. Tags aren't digests, so an upstream re-push could change an image. 4 categories aren't covered yet.
 - How we'd know this was wrong: a fault job fails without a code change more than once in 20 runs (flaky check, so relax it or add retries); an M2 agent run cites a name or label rather than evidence (extend the leakage list); CI time per push becomes a bottleneck (move to a shared cluster for evals in M4).
