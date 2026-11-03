@@ -5,8 +5,8 @@ Updated at the end of every session (`milestone-close` skill). This file is the 
 ## Status
 | Milestone | State | Verified in CI | PR |
 |---|---|---|---|
-| M0 Scaffold | done, awaiting owner review | ✅ [ci 41661299430](https://github.com/Ajay2002reddy/k8s-triage-harness/actions/runs/41661299430) (lint + test + validate, kind smoke) | PR_LINK |
-| M1 Fault library (12 → 20) | 12 faults, awaiting owner review | ✅ 12/12 [faults 41661299299](https://github.com/Ajay2002reddy/k8s-triage-harness/actions/runs/41661299299) | PR_LINK |
+| M0 Scaffold | done, awaiting owner review | ✅ [ci 41661299430](https://github.com/Ajay2002reddy/k8s-triage-harness/actions/runs/41661299430) (lint + test + validate, kind smoke) | [#1](https://github.com/Ajay2002reddy/k8s-triage-harness/pull/1) |
+| M1 Fault library (12 → 20) | 12 faults, awaiting owner review | ✅ 12/12 [faults 41661299299](https://github.com/Ajay2002reddy/k8s-triage-harness/actions/runs/41661299299) | [#1](https://github.com/Ajay2002reddy/k8s-triage-harness/pull/1) |
 | M2 Agent + tools | not started | – | – |
 | M3 Harness | not started | – | – |
 | M4 Evals + CI gate | not started | – | – |
