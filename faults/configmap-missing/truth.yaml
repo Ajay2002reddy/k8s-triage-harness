@@ -1,0 +1,13 @@
+id: configmap-missing
+namespace: billing
+category: config_missing
+root_cause: >-
+  Deployment api reads DATABASE_HOST and DATABASE_NAME from ConfigMap api-settings, which
+  doesn't exist (the namespace has api-config), so the container can't be created.
+evidence:
+  - "Pod api-* container waiting with reason CreateContainerConfigError"
+  - "Event Failed: Error: configmap \"api-settings\" not found"
+  - "Namespace has ConfigMap api-config with keys database_host and database_name"
+fix: "Point configMapKeyRef at api-config (or create api-settings with those keys)"
+requires: []
+difficulty: easy

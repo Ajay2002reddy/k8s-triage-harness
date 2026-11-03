@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: analytics
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reporter
+  namespace: analytics
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: reporter
+  namespace: analytics
+rules:
+  - apiGroups: [""]
+    resources: ["configmap"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: reporter
+  namespace: analytics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: reporter
+subjects:
+  - kind: ServiceAccount
+    name: reporter
+    namespace: analytics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reporter-app
+  namespace: analytics
+data:
+  main.py: |
+    """Loads report templates (ConfigMaps in this namespace) every 10 seconds."""
+    import json
+    import ssl
+    import time
+    import urllib.error
+    import urllib.request
+
+    SA = "/var/run/secrets/kubernetes.io/serviceaccount"
+    with open(f"{SA}/namespace") as f:
+        NAMESPACE = f.read().strip()
+    URL = f"https://kubernetes.default.svc/api/v1/namespaces/{NAMESPACE}/configmaps"
+    TLS = ssl.create_default_context(cafile=f"{SA}/ca.crt")
+
+    while True:
+        with open(f"{SA}/token") as f:  # re-read: projected tokens rotate
+            token = f.read().strip()
+        request = urllib.request.Request(URL, headers={"Authorization": f"Bearer {token}"})
+        try:
+            with urllib.request.urlopen(request, context=TLS, timeout=5) as response:
+                templates = json.load(response)["items"]
+            print(f"loaded {len(templates)} report templates", flush=True)
+        except urllib.error.HTTPError as err:
+            print(f"GET {URL} failed: HTTP {err.code}: {err.read().decode()}", flush=True)
+        except OSError as err:
+            print(f"GET {URL} failed: {err}", flush=True)
+        time.sleep(10)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporter
+  namespace: analytics
+  labels:
+    app: reporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reporter
+  template:
+    metadata:
+      labels:
+        app: reporter
+    spec:
+      serviceAccountName: reporter
+      containers:
+        - name: reporter
+          image: public.ecr.aws/docker/library/python:3.12.12-alpine
+          command: ["python", "/app/main.py"]
+          volumeMounts:
+            - name: app
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: app
+          configMap:
+            name: reporter-app

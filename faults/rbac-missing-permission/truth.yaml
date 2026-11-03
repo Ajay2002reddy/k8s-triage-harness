@@ -1,0 +1,15 @@
+id: rbac-missing-permission
+namespace: analytics
+category: rbac_forbidden
+root_cause: >-
+  Role reporter grants get/list/watch on "configmap" (singular). RBAC matches resource
+  names exactly, so the reporter ServiceAccount can't list "configmaps" and every API call
+  returns 403 Forbidden.
+evidence:
+  - "reporter logs: HTTP 403 ... configmaps is forbidden ... cannot list resource \"configmaps\""
+  - "The forbidden user is system:serviceaccount:analytics:reporter, the Deployment's ServiceAccount"
+  - "Role reporter rules: resources [configmap], verbs [get, list, watch]"
+  - "RoleBinding reporter binds Role reporter to ServiceAccount reporter, which the Deployment uses"
+fix: "Change the Role's resources to [configmaps]"
+requires: []
+difficulty: medium
