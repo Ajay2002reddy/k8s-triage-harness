@@ -90,6 +90,22 @@ def test_k_refuses_flags_that_change_the_target(tmp_path: Path, flag: str) -> No
     assert "kubectl" not in result.stdout  # nothing was executed
 
 
+@pytest.mark.parametrize(
+    ("call", "expected"),
+    [
+        ('at_least 2 "0"', False),
+        ('at_least 2 "1"', False),
+        ('at_least 2 "2"', True),
+        ('at_least 2 "10"', True),
+        ('at_least 2 "0 3"', True),  # one value per pod: any pod counts
+        ('at_least 2 "abc"', False),
+        ('at_least 2 ""', False),
+    ],
+)
+def test_at_least(tmp_path: Path, call: str, expected: bool) -> None:
+    assert (run(call, make_env(tmp_path)).returncode == 0) is expected
+
+
 def test_k_ignores_flags_meant_for_the_pod_command(tmp_path: Path) -> None:
     result = run("k exec deploy/web -- wget -s http://api/", make_env(tmp_path))
     assert result.returncode == 0, result.stderr

@@ -124,3 +124,12 @@ http_from() { k exec -n "$NS" "deploy/$1" -- wget -q -T 3 -O /dev/null "$2" 2>&1
 
 # pod_jsonpath SELECTOR JSONPATH: evaluate JSONPATH over the pods matching SELECTOR.
 pod_jsonpath() { k get pods -n "$NS" -l "$1" -o "jsonpath=$2"; }
+
+# at_least MIN "VALUES": true if any whitespace-separated integer in VALUES is >= MIN.
+at_least() {
+  local min="$1" value
+  for value in $2; do # split on whitespace on purpose: one value per pod
+    if [[ "$value" =~ ^[0-9]+$ ]] && ((value >= min)); then return 0; fi
+  done
+  return 1
+}
