@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+*.kubeconfig
+kubeconfig*
+
+# Claude Code personal files (shared config stays in .claude/settings.json)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Eval artifacts (commit summaries, not raw dumps)
+evals/results/**/raw/
+traces/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
