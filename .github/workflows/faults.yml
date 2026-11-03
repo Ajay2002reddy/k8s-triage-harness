@@ -1,0 +1,75 @@
+name: faults
+
+# Every fault, each on its own fresh kind cluster: check fails -> inject -> check passes ->
+# reset -> check fails (scripts/verify-fault.sh, ADR-003). Faults are discovered from
+# faults/*/truth.yaml, so adding a folder adds a matrix job.
+on:
+  push:
+    paths:
+      - "faults/**"
+      - "scripts/**"
+      - "cluster/**"
+      - "src/triage/harness/allowlist.py"
+      - "src/triage/evals/truth.py"
+      - "Makefile"
+      - "uv.lock"
+      - ".github/workflows/faults.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    name: discover faults
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.32"
+          enable-cache: true
+      - id: list
+        run: echo "matrix=$(uv run --frozen python -m triage.evals.truth matrix)" >> "$GITHUB_OUTPUT"
+
+  fault:
+    name: ${{ matrix.id }}
+    needs: discover
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    env:
+      FAULT: ${{ matrix.id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.32"
+          enable-cache: true
+      - run: make setup
+      - name: Install pinned kind and kubectl (checksum-verified)
+        run: |
+          make tools
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Create cluster
+        run: make cluster
+      - name: Install required add-ons
+        run: make addons NAME="$FAULT"
+      - name: Verify fault lifecycle
+        run: make verify-fault NAME="$FAULT"
+      - name: Diagnose
+        if: failure()
+        run: make diagnose NAME="$FAULT"
+      - name: Delete cluster
+        if: always()
+        run: make cluster-down
