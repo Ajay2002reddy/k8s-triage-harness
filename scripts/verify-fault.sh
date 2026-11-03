@@ -27,6 +27,9 @@ log "2/5 inject (twice)"
 
 log "3/5 check must pass"
 "$dir/check.sh" || die "the symptom never appeared"
+# The broken state as an agent would see it, in the CI log; truth.yaml's evidence
+# strings are checked against this.
+"$REPO_ROOT/scripts/diagnose.sh" "$id" || true
 
 log "4/5 reset (twice)"
 "$dir/reset.sh"
