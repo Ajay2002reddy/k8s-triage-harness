@@ -1,0 +1,13 @@
+id: pvc-unknown-storageclass
+namespace: media
+category: pvc_unbound
+root_cause: >-
+  PVC uploads requests storageClassName fast-ssd, which doesn't exist on this cluster
+  (kind only has "standard"), so the claim stays Pending and the web pod can't be scheduled.
+evidence:
+  - "PVC uploads is Pending; event ProvisioningFailed: storageclass.storage.k8s.io \"fast-ssd\" not found"
+  - "Pod web-* is Pending: FailedScheduling ... pod has unbound immediate PersistentVolumeClaims"
+  - "kubectl get storageclass lists only standard (default)"
+fix: "Use an existing StorageClass (standard, or omit storageClassName for the default) or create fast-ssd"
+requires: []
+difficulty: easy

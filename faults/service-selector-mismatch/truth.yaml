@@ -1,0 +1,13 @@
+id: service-selector-mismatch
+namespace: checkout
+category: selector_mismatch
+root_cause: >-
+  Service api selects app=api, but the api pods are labelled app.kubernetes.io/name=api,
+  so the Service has no endpoints and the frontend's requests are refused.
+evidence:
+  - "Service api has selector app=api; its EndpointSlice has no endpoints"
+  - "Pods api-* are Running and Ready with label app.kubernetes.io/name=api (no app label)"
+  - "frontend logs: wget: can't connect to remote host (...): Connection refused / GET http://api/ failed"
+fix: "Change the Service selector to app.kubernetes.io/name: api (or add the app=api label to the pod template)"
+requires: []
+difficulty: medium

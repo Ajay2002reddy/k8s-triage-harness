@@ -1,0 +1,13 @@
+id: probe-wrong-path
+namespace: catalog
+category: probe_misconfig
+root_cause: >-
+  The web container's liveness probe requests /healthz, which this nginx doesn't serve
+  (HTTP 404), so the kubelet kills a healthy container every ~15s.
+evidence:
+  - "Events Unhealthy: Liveness probe failed: HTTP probe failed with statuscode: 404"
+  - "Events Killing: Container web failed liveness probe, will be restarted"
+  - "restartCount keeps growing while the readiness probe on / passes"
+fix: "Point the liveness probe at a path the app serves (e.g. /), or add a /healthz endpoint"
+requires: []
+difficulty: medium

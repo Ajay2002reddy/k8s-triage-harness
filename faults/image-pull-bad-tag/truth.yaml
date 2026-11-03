@@ -1,0 +1,12 @@
+id: image-pull-bad-tag
+namespace: storefront
+category: image_pull
+root_cause: >-
+  Deployment web uses image tag 1.30.2-alpne, a typo of 1.30.2-alpine; the tag doesn't
+  exist in the registry, so the pull fails.
+evidence:
+  - "Pods web-* are Pending with container state waiting: ErrImagePull / ImagePullBackOff"
+  - "Event Failed: pulling public.ecr.aws/docker/library/nginx:1.30.2-alpne ... not found"
+fix: "Set the image tag to an existing one: public.ecr.aws/docker/library/nginx:1.30.2-alpine"
+requires: []
+difficulty: easy

@@ -1,0 +1,13 @@
+id: networkpolicy-blocks-client
+namespace: payments
+category: network_policy
+root_cause: >-
+  NetworkPolicy api-ingress only admits traffic to the api pods from pods labelled
+  app=web, but the client is labelled app=frontend, so its connections are dropped.
+evidence:
+  - "NetworkPolicy api-ingress selects app=api and allows ingress only from podSelector app=web"
+  - "frontend pods carry app=frontend; no pod in the namespace has app=web"
+  - "frontend logs: wget: download timed out / GET http://api/ failed, while Service api has ready endpoints"
+fix: "Allow app=frontend in api-ingress (or relabel the client to match the policy)"
+requires: []
+difficulty: medium

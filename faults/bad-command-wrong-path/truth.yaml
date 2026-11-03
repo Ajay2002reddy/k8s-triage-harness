@@ -1,0 +1,13 @@
+id: bad-command-wrong-path
+namespace: ledger
+category: bad_command
+root_cause: >-
+  The worker container runs `python /app/worker.py`, but the script from ConfigMap worker
+  is mounted at /opt/worker, so Python exits at once with "can't open file".
+evidence:
+  - "Pod worker-* is in CrashLoopBackOff; lastState.terminated.exitCode is 2"
+  - "Logs: python: can't open file '/app/worker.py': [Errno 2] No such file or directory"
+  - "Deployment command is [python, /app/worker.py]; volumeMount for ConfigMap worker is /opt/worker"
+fix: "Run python /opt/worker/worker.py, or mount the ConfigMap at /app"
+requires: []
+difficulty: easy

@@ -6,6 +6,7 @@ k9s, kubectx or stern, every targeted kube context must match ^(kind|k3d)-.
 Exit 2 blocks the tool call and shows stderr to Claude. Fails closed: if the
 context can't be determined, the command is blocked.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,18 +16,27 @@ import subprocess
 import sys
 
 ALLOWED = re.compile(r"^(kind|k3d)-")
-KUBE_TOOLS = re.compile(r"(^|[\s;&|(`$])(kubectl|helm|k9s|kubectx|stern)(\s|$)")
+# A tool name counts as an invocation at the start, after a separator, after a path
+# (/usr/local/bin/kubectl) or after a quote (sh -c 'kubectl ...'). Lookarounds so that
+# adjacent invocations aren't swallowed. Best effort: the product code enforces the
+# allowlist itself (src/triage/harness/allowlist.py).
+KUBE_TOOLS = re.compile(
+    r"(?:^|(?<=[\s;&|(`$/'\"\\]))(kubectl|helm|k9s|kubectx|stern)(?=[\s'\"`;&|)]|$)"
+)
 EXPLICIT_CTX = re.compile(r"--(?:kube-)?context(?:=|\s+)([^\s;&|]+)")
 USE_CTX = re.compile(r"(?:config\s+use-context|kubectx)\s+([^\s;&|-][^\s;&|]*)")
 
 
 def current_context() -> str:
-    if not shutil.which("kubectl"):
+    kubectl = shutil.which("kubectl")
+    if not kubectl:
         return ""
     try:
-        out = subprocess.run(
-            ["kubectl", "config", "current-context"],
-            capture_output=True, text=True, timeout=5,
+        out = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            [kubectl, "config", "current-context"],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         return out.stdout.strip()
     except (subprocess.SubprocessError, OSError):
@@ -54,7 +64,10 @@ def main() -> None:
         sys.exit(0)
 
     if "--kubeconfig" in cmd or "KUBECONFIG=" in cmd:
-        block("custom kubeconfig paths are not allowed; use the default kubeconfig with a kind/k3d context")
+        block(
+            "custom kubeconfig paths are not allowed; "
+            "use the default kubeconfig with a kind/k3d context"
+        )
 
     explicit = [c.strip("'\"") for c in EXPLICIT_CTX.findall(cmd)]
     switched = [c.strip("'\"") for c in USE_CTX.findall(cmd)]

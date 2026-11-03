@@ -1,0 +1,15 @@
+id: dns-policy-default
+namespace: orders
+category: dns
+root_cause: >-
+  The worker pod sets dnsPolicy: Default, which means "use the node's resolver", not the
+  cluster default (ClusterFirst). The node's resolver doesn't know cluster.local, so
+  api.orders.svc.cluster.local can't be resolved.
+evidence:
+  - "worker logs: wget: bad address 'api.orders.svc.cluster.local' / sync with api failed"
+  - "worker pod spec has dnsPolicy: Default"
+  - "worker's /etc/resolv.conf has the node's nameserver, not kube-dns, and no cluster.local search domain"
+  - "Service api has ready endpoints, and the same name resolves from other pods"
+fix: "Remove dnsPolicy (defaults to ClusterFirst) or set dnsPolicy: ClusterFirst"
+requires: []
+difficulty: hard

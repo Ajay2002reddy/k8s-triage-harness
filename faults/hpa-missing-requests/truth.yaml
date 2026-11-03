@@ -1,0 +1,13 @@
+id: hpa-missing-requests
+namespace: profiles
+category: hpa_misconfig
+root_cause: >-
+  HPA api scales on CPU utilization, but the api container sets no CPU request.
+  Utilization is usage divided by request, so the HPA can't compute it and never scales.
+evidence:
+  - "HPA api condition ScalingActive=False, reason FailedGetResourceMetric"
+  - "Message: failed to get cpu utilization: missing request for cpu in container api of Pod api-*"
+  - "Deployment api's container has no resources.requests"
+fix: "Set resources.requests.cpu on the api container (or scale on an absolute metric)"
+requires: [metrics-server]
+difficulty: medium

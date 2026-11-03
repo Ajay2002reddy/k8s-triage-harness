@@ -1,0 +1,4 @@
+# Follow `source` directives relative to each script, so shellcheck knows what
+# scripts/lib.sh defines (k, NS, wait_for, ...).
+source-path=SCRIPTDIR
+external-sources=true

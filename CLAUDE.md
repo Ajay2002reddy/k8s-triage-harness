@@ -22,13 +22,20 @@ An agent that finds the root cause of Kubernetes incidents, plus the production 
 - Before a PR, run the `harness-reviewer` subagent on the diff.
 
 ## Commands
-These are added in M0; update this list when they exist.
-- `make setup`: install deps (uv)
-- `make lint` / `make test`
-- `make cluster` / `make cluster-down`: kind cluster
-- `make fault NAME=<id>` / `make reset NAME=<id>`
+`make help` lists everything. Cluster targets need Docker + kind, so in cloud sessions they only run in CI.
+- `make setup`: install pinned deps (`uv sync --frozen`)
+- `make lint`: ruff, ruff format, mypy (strict), yamllint, shellcheck, bash -n
+- `make test`: pytest, no cluster needed
+- `make tools` / `make validate`: pinned kind, kubectl, kubeconform, actionlint (sha256-checked), then kubeconform + actionlint
+- `make cluster` / `make cluster-down`: kind cluster `triage` (context `kind-triage`), smoke-tested
+- `make addons|fault|check|reset|verify-fault|diagnose NAME=<id>`: fault lifecycle (`verify-fault` = what CI runs)
 - `make eval`: from M4
 - `make replay TRACE=<file>`: from M5
+
+## CI (the only place a cluster exists for cloud sessions)
+- `ci.yml` (every push): lint + test + validate, kind smoke. `faults.yml`: one kind cluster per fault.
+- Read results via REST: `gh api "repos/Ajay2002reddy/k8s-triage-harness/actions/runs?branch=<b>&per_page=5"`; jobs `.../runs/<id>/jobs`; logs `.../actions/jobs/<id>/logs`. (`gh run`/`gh pr` use GraphQL, which may be blocked.)
+- Shell scripts that touch a cluster must source `scripts/lib.sh` and use `k`, never kubectl directly (a test enforces this).
 
 ## Conventions
 - Python 3.12, uv, ruff, pytest, typed code (`from __future__ import annotations`).

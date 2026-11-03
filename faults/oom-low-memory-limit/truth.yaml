@@ -1,0 +1,13 @@
+id: oom-low-memory-limit
+namespace: reports
+category: oom
+root_cause: >-
+  The worker loads a 256 MiB export into memory but its container memory limit is 64Mi,
+  so the kernel OOM-kills it on every start.
+evidence:
+  - "Pod worker-* restarts; lastState.terminated.reason is OOMKilled (exit code 137)"
+  - "Container worker has resources.limits.memory: 64Mi"
+  - "Logs stop after 'loading monthly export'"
+fix: "Raise the memory limit above the working set (e.g. 512Mi) or stream the export instead of loading it whole"
+requires: []
+difficulty: easy

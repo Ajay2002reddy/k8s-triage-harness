@@ -1,0 +1,13 @@
+id: service-port-mismatch
+namespace: inventory
+category: port_mismatch
+root_cause: >-
+  Service api forwards to targetPort 8080, but the api container (nginx) listens on port
+  80, so every connection through the Service is refused although endpoints exist.
+evidence:
+  - "Service api: port 80 -> targetPort 8080; EndpointSlice lists the api pod IPs on port 8080"
+  - "Pods api-* declare containerPort 80 and are Ready"
+  - "frontend logs: wget: can't connect to remote host (...): Connection refused"
+fix: "Set the Service targetPort to 80 (or the named port http)"
+requires: []
+difficulty: medium
