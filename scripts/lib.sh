@@ -24,7 +24,22 @@ CTX="$(cd -- "$REPO_ROOT" &&
   die "refusing to touch this cluster (reason above). Use 'make cluster' for a kind cluster."
 readonly CTX
 
-k() { command kubectl --context "$CTX" "$@"; }
+# k: kubectl pinned to the validated context. Flags that pick a different target are
+# refused: kubectl lets a later --context override ours, and --kubeconfig/--server/
+# --cluster would point at something the allowlist never checked.
+k() {
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == "--" ]] && break # what follows is the command run inside a pod
+    case "$arg" in
+      --context | --context=* | --kubeconfig | --kubeconfig=* | --cluster | --cluster=* | \
+        --server | --server=* | -s)
+        die "k: refusing '$arg': it would bypass the cluster allowlist"
+        ;;
+    esac
+  done
+  command kubectl --context "$CTX" "$@"
+}
 
 # wait_for SECONDS DESCRIPTION CMD...: poll CMD every 3s until it succeeds; 1 on timeout.
 wait_for() {
